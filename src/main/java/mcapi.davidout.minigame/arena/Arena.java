@@ -35,12 +35,16 @@ public class Arena implements IArena {
     }
 
     @Override
-    public void createArenaWorld(File file) {
-        if (!file.isDirectory()) return;
-
+    public void createArenaWorld(File file, IArenaCallback callback) {
         World world = Bukkit.getWorld(file.getName());
-        if (world == null) Bukkit.createWorld(new WorldCreator(file.getName()));
+        if(world == null) {
+            world = Bukkit.createWorld(new WorldCreator(file.getName()));
+        }
 
-        this.activeArenas.add(new ArenaWorld(world));
+        ArenaWorld arenaWorld = new ArenaWorld(world);
+        this.activeArenas.add(arenaWorld);
+        if(callback != null) {
+            callback.onSucces(arenaWorld);
+        }
     }
 }

@@ -10,7 +10,7 @@ public interface IArena {
     List<IArenaWorld> getActiveArenaWorlds();
 
     IArenaWorld getArenaWorld(UUID uuid);
-    void createArenaWorld(File file);
+    void createArenaWorld(File file, IArenaCallback callback);
 
 
 }

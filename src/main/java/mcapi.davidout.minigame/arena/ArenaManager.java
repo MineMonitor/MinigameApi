@@ -2,6 +2,8 @@ package mcapi.davidout.minigame.arena;
 
 import mcapi.davidout.minigame.utils.Folder;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -18,11 +20,13 @@ public class ArenaManager implements IArenaManager {
 
     private final Plugin plugin;
 
-    public ArenaManager(Plugin plugin, File folderToCopyFrom, File folderToCopyTo) {
+    public ArenaManager(Plugin plugin, File folderToCopyFrom) {
         this.plugin = plugin;
         this.arenas = new ArrayList<>();
         this.fromFolder = folderToCopyFrom;
-        this.toFolder = folderToCopyTo;
+        this.toFolder = Bukkit.getWorldContainer();
+
+        this.createFolders();
     }
 
     public ArenaManager(Plugin plugin) {
@@ -30,6 +34,18 @@ public class ArenaManager implements IArenaManager {
         this.arenas = new ArrayList<>();
         this.fromFolder = Bukkit.getWorldContainer();
         this.toFolder = Bukkit.getWorldContainer();
+
+        this.createFolders();
+    }
+
+    private void createFolders() {
+        if(!this.fromFolder.exists()) {
+            this.fromFolder.mkdirs();
+        }
+
+        if(!this.toFolder.exists()) {
+            this.fromFolder.mkdirs();
+        }
     }
 
 
@@ -64,30 +80,29 @@ public class ArenaManager implements IArenaManager {
     @Override
     public boolean createNewArena(IArena arena) throws IOException {
         File arenaWorldFolder = new File(this.toFolder, arena.getArenaName() + "-" + this.getArenaID(arena));
-        Folder.copyDirectory(new File(this.fromFolder, arena.getArenaName()), arenaWorldFolder);
-        arena.createArenaWorld(arenaWorldFolder);
+        Folder.copyDirectory(new File(this.fromFolder, arena.getArenaName()), arenaWorldFolder, Arrays.asList("uid.dat", "session.lock"));
+        arena.createArenaWorld(arenaWorldFolder, null);
         return true;
     }
 
     @Override
     public void createNewArenaAsync(IArena arena, IArenaCallback callback) {
-        File arenaWorldFolder = new File(this.toFolder, arena.getArenaName() + "-" + this.getArenaID(arena));
+        int arenaId = this.getArenaID(arena);
+        File arenaWorldFolder = new File(this.toFolder, arena.getArenaName() + "-" + arenaId);
+        File fromFolder = new File(this.fromFolder, arena.getArenaName());
+        List<String> ignoreFiles = Arrays.asList("uid.dat", "session.lock");
 
-        Folder.copyDirectoryAsync(plugin, new File(this.fromFolder, arena.getArenaName()), arenaWorldFolder, new Folder.DirectoryCopyCallback() {
-            @Override
-            public void onComplete(boolean succes, File folder) {
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                   arena.createArenaWorld(folder);
-                });
-            }
+       Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+           try {
+               Folder.copyDirectory(fromFolder, arenaWorldFolder, ignoreFiles);
 
-            @Override
-            public void onError(Exception exception) {
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                   callback.onException(exception);
-                });
-            }
-        });
+               Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                   arena.createArenaWorld(arenaWorldFolder, callback);
+               }, 2);
+           } catch (IOException e) {
+               throw new RuntimeException(e);
+           }
+       });
     }
 
     private int getArenaID(IArena arena) {
