@@ -44,8 +44,6 @@ public class Folder {
 
         for (File file : files) {
             File destinationFile = new File(destinationDirectory, file.getName());
-
-            System.out.println(file.getName() + "," + ignoreFiles.toString());
             if(ignoreFiles.contains(file.getName())) {
                 continue;
             }

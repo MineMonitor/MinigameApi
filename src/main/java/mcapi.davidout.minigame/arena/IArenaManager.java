@@ -1,5 +1,7 @@
 package mcapi.davidout.minigame.arena;
 
+import org.bukkit.World;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,9 @@ public interface IArenaManager {
 
     void addArena(IArena arena);
     void removeArena(IArena arena);
+
+    IArena getArenaByWorld(World world);
+    boolean worldIsArenaWorld(World world);
 
 
 

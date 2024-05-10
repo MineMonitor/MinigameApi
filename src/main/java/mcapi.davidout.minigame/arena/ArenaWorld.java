@@ -26,4 +26,5 @@ public class ArenaWorld implements IArenaWorld {
     public World getWorld() {
         return this.world;
     }
+
 }

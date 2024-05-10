@@ -1,10 +1,13 @@
 package mcapi.davidout.minigame.arena;
 
+import mcapi.davidout.minigame.arena.event.area.AreaEnterEvent;
+import mcapi.davidout.minigame.arena.event.area.AreaLeaveEvent;
 import mcapi.davidout.minigame.utils.Folder;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,30 +15,34 @@ import java.util.*;
 
 public class ArenaManager implements IArenaManager {
 
+    private static ArenaManager instance;
+    public static ArenaManager getInstance() {
+        return instance;
+    }
 
 
-    private final List<IArena> arenas;
-    private final File fromFolder;
-    private final File toFolder;
+    private List<IArena> arenas;
+    private File fromFolder;
+    private File toFolder;
 
-    private final Plugin plugin;
+    private Plugin plugin;
 
     public ArenaManager(Plugin plugin, File folderToCopyFrom) {
+        this.initialize(plugin, folderToCopyFrom);
+    }
+
+    public ArenaManager(Plugin plugin) {
+        this.initialize(plugin, Bukkit.getWorldContainer());
+    }
+
+    private void initialize(Plugin plugin, File folderToCopyFrom) {
+        instance = this;
         this.plugin = plugin;
         this.arenas = new ArrayList<>();
         this.fromFolder = folderToCopyFrom;
         this.toFolder = Bukkit.getWorldContainer();
-
         this.createFolders();
-    }
-
-    public ArenaManager(Plugin plugin) {
-        this.plugin = plugin;
-        this.arenas = new ArrayList<>();
-        this.fromFolder = Bukkit.getWorldContainer();
-        this.toFolder = Bukkit.getWorldContainer();
-
-        this.createFolders();
+        this.registerEvents(plugin.getServer().getPluginManager());
     }
 
     private void createFolders() {
@@ -46,6 +53,11 @@ public class ArenaManager implements IArenaManager {
         if(!this.toFolder.exists()) {
             this.fromFolder.mkdirs();
         }
+    }
+
+    private void registerEvents(PluginManager pm) {
+        pm.registerEvents(new AreaEnterEvent(null, null, null, null, null), this.plugin);
+        pm.registerEvents(new AreaLeaveEvent(null, null, null, null, null), this.plugin);
     }
 
 
@@ -73,6 +85,16 @@ public class ArenaManager implements IArenaManager {
     }
 
     @Override
+    public IArena getArenaByWorld(World world) {
+        return this.arenas.stream().filter(arena -> arena.worldIsArena(world)).findFirst().orElse(null);
+    }
+
+    @Override
+    public boolean worldIsArenaWorld(World world) {
+        return this.getArenaByWorld(world) != null;
+    }
+
+    @Override
     public IArena getArenaByName(String name) {
         return this.arenas.stream().filter(arena -> arena.getArenaName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
@@ -82,6 +104,7 @@ public class ArenaManager implements IArenaManager {
         File arenaWorldFolder = new File(this.toFolder, arena.getArenaName() + "-" + this.getArenaID(arena));
         Folder.copyDirectory(new File(this.fromFolder, arena.getArenaName()), arenaWorldFolder, Arrays.asList("uid.dat", "session.lock"));
         arena.createArenaWorld(arenaWorldFolder, null);
+        this.arenas.add(arena);
         return true;
     }
 
@@ -98,6 +121,7 @@ public class ArenaManager implements IArenaManager {
 
                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                    arena.createArenaWorld(arenaWorldFolder, callback);
+                   this.arenas.add(arena);
                }, 2);
            } catch (IOException e) {
                throw new RuntimeException(e);
