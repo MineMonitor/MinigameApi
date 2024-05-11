@@ -1,5 +1,8 @@
 package mcapi.davidout.minigame.game;
 
+import mcapi.davidout.minigame.game.event.PlayerJoinGameEvent;
+import mcapi.davidout.minigame.game.event.SpectatorJoinEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -52,10 +55,18 @@ public abstract class IGame {
     public abstract void onGameStateChange(GameState state);
 
     public void addPlayer(Player player) {
+        PlayerJoinGameEvent event = new PlayerJoinGameEvent(player, this);
+        Bukkit.getPluginManager().callEvent(event);
+
+        if(event.isCancelled()) {
+            return;
+        }
+
         this.playerList.add(player);
 
         this.spectatorList.remove(player);
         this.setToGamePlayer(player);
+
     }
 
     public void removePlayer(Player player) {
@@ -63,10 +74,17 @@ public abstract class IGame {
     }
 
     public void addSpectator(Player player) {
+        SpectatorJoinEvent event = new SpectatorJoinEvent(player, this);
+        Bukkit.getPluginManager().callEvent(event);
+        if(event.isCancelled()) {
+            return;
+        }
+
         this.spectatorList.add(player);
 
         this.playerList.remove(player);
         this.setToSpectator(player);
+
     }
 
     public void removeSpectator(Player player) {

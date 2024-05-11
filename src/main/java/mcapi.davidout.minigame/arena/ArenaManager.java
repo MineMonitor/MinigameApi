@@ -15,12 +15,6 @@ import java.util.*;
 
 public class ArenaManager implements IArenaManager {
 
-    private static ArenaManager instance;
-    public static ArenaManager getInstance() {
-        return instance;
-    }
-
-
     private List<IArena> arenas;
     private File fromFolder;
     private File toFolder;
@@ -36,7 +30,6 @@ public class ArenaManager implements IArenaManager {
     }
 
     private void initialize(Plugin plugin, File folderToCopyFrom) {
-        instance = this;
         this.plugin = plugin;
         this.arenas = new ArrayList<>();
         this.fromFolder = folderToCopyFrom;
@@ -56,8 +49,8 @@ public class ArenaManager implements IArenaManager {
     }
 
     private void registerEvents(PluginManager pm) {
-        pm.registerEvents(new AreaEnterEvent(null, null, null, null, null), this.plugin);
-        pm.registerEvents(new AreaLeaveEvent(null, null, null, null, null), this.plugin);
+        pm.registerEvents(new AreaEnterEvent(this), this.plugin);
+        pm.registerEvents(new AreaLeaveEvent(this), this.plugin);
     }
 
 

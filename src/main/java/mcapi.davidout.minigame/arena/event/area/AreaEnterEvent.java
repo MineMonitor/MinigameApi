@@ -2,64 +2,39 @@ package mcapi.davidout.minigame.arena.event.area;
 
 import mcapi.davidout.minigame.arena.ArenaManager;
 import mcapi.davidout.minigame.arena.IArena;
+import mcapi.davidout.minigame.arena.IArenaManager;
 import mcapi.davidout.minigame.arena.area.IArea;
-import mcapi.davidout.minigame.arena.event.ArenaEvent;
+import mcapi.davidout.minigame.event.CustomEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-public class AreaEnterEvent extends ArenaEvent implements Listener {
+public class AreaEnterEvent extends AreaMoveEvent implements Listener {
 
-    private final IArena arena;
-    private final IArea area;
-    private final Player player;
-    private final Location from;
-    private final Location to;
+    private static IArenaManager arenaManager;
 
-
-    public AreaEnterEvent(IArena arena, IArea area, Player player, Location from, Location to) {
-        this.arena = arena;
-        this.area = area;
-        this.player = player;
-        this.from = from;
-        this.to = to;
+    public AreaEnterEvent(IArenaManager manager) {
+        arenaManager = manager;
     }
 
-    public Player getPlayer() {
-        return player;
+    public AreaEnterEvent(IArena cArena, IArea area, Player player, Location from, Location to) {
+        super(cArena, area, player, from, to);
     }
 
-
-    public IArena getArena() {
-        return arena;
-    }
-
-    public IArea getArea() {
-        return area;
-    }
-
-    public Location getFrom() {
-        return this.from;
-    }
-
-    public Location getTo() {
-        return this.to;
-    }
 
     @EventHandler
     public void onEnter(PlayerMoveEvent e) {
         World w = e.getPlayer().getWorld();
 
-        if(ArenaManager.getInstance() == null) {
+        if(arenaManager == null) {
             return;
         }
 
-        IArena cArena =  ArenaManager.getInstance().getArenaByWorld(w);
+        IArena cArena =  arenaManager.getArenaByWorld(w);
         if(cArena == null) {
             return;
         }

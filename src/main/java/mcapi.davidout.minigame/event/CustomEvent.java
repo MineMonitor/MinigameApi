@@ -1,14 +1,14 @@
-package mcapi.davidout.minigame.arena.event;
+package mcapi.davidout.minigame.event;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public abstract class ArenaEvent extends Event {
+public abstract class CustomEvent extends Event {
 
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled;
 
-    public ArenaEvent() {
+    public CustomEvent() {
         this.cancelled = false;
     }
 
